@@ -1,0 +1,10 @@
+Flask
+flask_sqlalchemy
+flask_login
+flask_bcrypt
+flask_cors
+werkzeug
+fpdf
+openpyxl
+pymysql
+cryptography

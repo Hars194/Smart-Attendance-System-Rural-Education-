@@ -1,0 +1,67 @@
+# languages.py
+TRANSLATIONS = {
+    'en': {
+        'title': 'School Attendance System',
+        'login': 'Login',
+        'username': 'Username',
+        'password': 'Password',
+        'dashboard': 'Dashboard',
+        'students': 'Students',
+        'add_student': 'Add Student',
+        'logout': 'Logout',
+        'welcome': 'Welcome',
+        'present': 'Present',
+        'absent': 'Absent',
+        'total_students': 'Total Students',
+        'attendance': 'Attendance',
+        'report': 'Download Report'
+    },
+    'hi': {
+        'title': 'स्कूल उपस्थिति प्रणाली',
+        'login': 'लॉगिन',
+        'username': 'उपयोगकर्ता नाम',
+        'password': 'पासवर्ड',
+        'dashboard': 'डैशबोर्ड',
+        'students': 'छात्र',
+        'add_student': 'छात्र जोड़ें',
+        'logout': 'लॉग आउट',
+        'welcome': 'स्वागत है',
+        'present': 'उपस्थित',
+        'absent': 'अनुपस्थित',
+        'total_students': 'कुल छात्र',
+        'attendance': 'उपस्थिति',
+        'report': 'रिपोर्ट डाउनलोड करें'
+    },
+    'mr': {
+        'title': 'शाळा उपस्थिती प्रणाली',
+        'login': 'लॉगिन',
+        'username': 'वापरकर्ता नाव',
+        'password': 'पासवर्ड',
+        'dashboard': 'डॅशबोर्ड',
+        'students': 'विद्यार्थी',
+        'add_student': 'विद्यार्थी जोडा',
+        'logout': 'बाहेर पडा',
+        'welcome': 'स्वागत आहे',
+        'present': 'उपस्थित',
+        'absent': 'गैरहजर',
+        'total_students': 'एकूण विद्यार्थी',
+        'attendance': 'उपस्थिती',
+        'report': 'अहवाल डाउनलोड करा'
+    },
+    'gu': {
+        'title': 'શાળા હાજરી સિસ્ટમ',
+        'login': 'લૉગિન',
+        'username': 'વપરાશકર્તા નામ',
+        'password': 'પાસવર્ડ',
+        'dashboard': 'ડેશબોર્ડ',
+        'students': 'વિદ્યાર્થીઓ',
+        'add_student': 'વિદ્યાર્થી ઉમેરો',
+        'logout': 'લૉગ આઉટ',
+        'welcome': 'સ્વાગત છે',
+        'present': 'હાજર',
+        'absent': 'ગેરહાજર',
+        'total_students': 'કુલ વિદ્યાર્થીઓ',
+        'attendance': 'હાજરી',
+        'report': 'રિપોર્ટ ડાઉનલોડ કરો'
+    }
+}

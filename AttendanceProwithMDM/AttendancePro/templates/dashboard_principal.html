@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center">
+    <h2>{{ school.name }} (Principal)</h2>
+    <div>
+        <a href="/add_student" class="btn btn-primary btn-sm">Add Student</a>
+        <a href="/logout" class="btn btn-danger btn-sm">Logout</a>
+    </div>
+</div>
+<hr>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white d-flex justify-content-between">
+                <h5 class="mb-0">📈 Class-Wise Attendance</h5>
+                <span class="badge bg-light text-dark" id="liveIndicator">● Live</span>
+            </div>
+            <div class="card-body">
+                <canvas id="classChart" style="max-height: 250px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        
+        <div class="card p-3 shadow mb-3 border-primary">
+            <h5 class="text-primary">⚙️ Attendance Settings</h5>
+            <p class="text-muted small mb-2">Configure when the RFID system accepts attendance.</p>
+            
+            <form action="/update_time_settings" method="POST">
+                <div class="row g-2 align-items-center mb-2">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Start Time</label>
+                        <input type="time" name="start_time" class="form-control" value="{{ school.start_time }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Duration (Min)</label>
+                        <input type="number" name="duration" class="form-control" min="1" max="60" value="{{ school.duration }}" required>
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-sm w-100">Update Settings</button>
+            </form>
+        </div>
+        <div class="card p-3 shadow mb-3">
+            <h5 class="text-success">Create Teacher</h5>
+            <form action="/create_user" method="POST">
+                <input type="text" name="username" class="form-control mb-2" placeholder="Teacher Username" required>
+                <input type="password" name="password" class="form-control mb-2" placeholder="Password" required>
+                
+                <label class="form-label">Assign Class</label>
+                <div class="input-group mb-2">
+                    <select class="form-select" onchange="document.getElementById('customClass').value=this.value">
+                        <option value="">Select...</option>
+                        {% for c in class_list %}
+                        <option value="{{ c }}">{{ c }}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="text" name="assigned_class" id="customClass" class="form-control" placeholder="Or Type New" required>
+                </div>
+                
+                <button class="btn btn-success w-100">Create</button>
+            </form>
+        </div>
+
+        <div class="card p-3 shadow mb-3">
+            <h5>Teachers List</h5>
+            <ul class="list-group list-group-flush" style="max-height: 300px; overflow-y:auto;">
+                {% for t in teachers %}
+                <li class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ t.username }}</strong>
+                            <br><small class="text-muted">Class: {{ t.assigned_class }}</small>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-sm btn-warning py-0" data-bs-toggle="modal" data-bs-target="#editTeacher{{ t.id }}">✎</button>
+                            <a href="/delete_user/{{ t.id }}" class="btn btn-sm btn-danger py-0" onclick="return confirm('Delete Teacher?')">X</a>
+                        </div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-dark text-white">Live Logs & Reports</div>
+            <div class="card-body bg-light">
+                <form method="GET" class="row g-2 align-items-center">
+                    <div class="col-auto">
+                        <select name="classroom" class="form-select form-select-sm">
+                            <option value="">All Classes</option>
+                            {% for c in class_list %}
+                            <option value="{{ c }}" {{ 'selected' if request.args.get('classroom') == c }}>{{ c }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-auto"><input type="date" name="start_date" class="form-control form-control-sm" value="{{ start_date }}"></div>
+                    <div class="col-auto">-</div>
+                    <div class="col-auto"><input type="date" name="end_date" class="form-control form-control-sm" value="{{ end_date }}"></div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+                        <a href="{{ url_for('principal_dashboard', school_id=school.id) }}" class="btn btn-sm btn-secondary">Clear</a>
+                    </div>
+                    <div class="col-auto ms-auto">
+                        <div class="btn-group">
+                            <button type="submit" formaction="/export_report" name="format" value="excel" class="btn btn-sm btn-success">📥 Excel</button>
+                            <button type="submit" formaction="/export_report" name="format" value="pdf" class="btn btn-sm btn-danger">📄 PDF</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="card-body p-0" style="max-height: 600px; overflow-y:auto;">
+                <table class="table table-striped mb-0">
+                    <thead class="table-light"><tr><th>Time</th><th>Name</th><th>Status</th><th>Action</th></tr></thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr>
+                            <td>{{ log.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>{{ log.student_name }}</td>
+                            <td class="{{ 'text-success' if log.status=='PRESENT' else 'text-danger' }}">{{ log.status }}</td>
+                            <td><a href="/delete_log/{{ log.id }}" class="btn btn-sm btn-danger" onclick="return confirm('Delete Log?')">X</a></td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="4" class="text-center">No logs found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% for t in teachers %}
+<div class="modal fade" id="editTeacher{{ t.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="/edit_user/{{ t.id }}" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Teacher</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label>Name</label>
+                    <input type="text" name="username" class="form-control mb-2" value="{{ t.username }}" required>
+                    
+                    <label>Assigned Class</label>
+                    <input type="text" name="assigned_class" class="form-control mb-2" value="{{ t.assigned_class }}" required>
+                    
+                    <label>New Password (Optional)</label>
+                    <input type="password" name="password" class="form-control" placeholder="Leave empty to keep same">
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // --- SAFE DATA LOADING (EDITOR FRIENDLY) ---
+    // Using quotes and JSON.parse to prevent VS Code red lines
+    const rawClassData = JSON.parse('{{ class_stats | tojson | safe }}');
+    const schoolId = "{{ school.id }}";
+    // -------------------------------------------
+
+    const classLabels = rawClassData.map(item => item.name);
+    const classValues = rawClassData.map(item => item.percentage);
+
+    const ctx = document.getElementById('classChart').getContext('2d');
+    let myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: classLabels,
+            datasets: [{
+                label: 'Today\'s Attendance %',
+                data: classValues,
+                backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: { 
+            responsive: true, 
+            scales: { y: { beginAtZero: true, max: 100 } } 
+        }
+    });
+
+    async function updateClassChart() {
+        try {
+            const response = await fetch(`/api/stats/class/${schoolId}`);
+            const data = await response.json();
+            
+            myChart.data.labels = data.map(item => item.name);
+            myChart.data.datasets[0].data = data.map(item => item.percentage);
+            myChart.update();
+
+            const badge = document.getElementById('liveIndicator');
+            if(badge) {
+                badge.style.opacity = '0.5'; 
+                setTimeout(() => badge.style.opacity = '1', 500);
+            }
+        } catch (error) { 
+            console.error("Sync error", error); 
+        }
+    }
+    
+    // Auto-update every 5 seconds
+    setInterval(updateClassChart, 5000);
+</script>
+{% endblock %}

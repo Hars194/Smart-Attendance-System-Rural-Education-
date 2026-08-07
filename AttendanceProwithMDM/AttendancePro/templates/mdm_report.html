@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="text-primary">🍛 Mid-Day Meal Report</h2>
+        <p class="text-muted">Govt. Rates: Primary (₹6.78) | Upper Primary (₹10.17)</p>
+    </div>
+    <div>
+        <a href="/super-admin/dashboard" class="btn btn-secondary">← Back to Dashboard</a>
+        <a href="{{ url_for('export_mdm_report', start_date=start_date, end_date=end_date) }}" class="btn btn-success">📥 Download Excel Sheet</a>
+    </div>
+</div>
+<hr>
+
+<div class="card shadow mb-4">
+    <div class="card-body bg-light">
+        <form method="GET" class="row g-3 align-items-center">
+            <div class="col-auto">
+                <label class="fw-bold">Filter Period:</label>
+            </div>
+            <div class="col-auto">
+                <input type="date" name="start_date" class="form-control" value="{{ start_date }}" required>
+            </div>
+            <div class="col-auto">to</div>
+            <div class="col-auto">
+                <input type="date" name="end_date" class="form-control" value="{{ end_date }}" required>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">Calculate Cost</button>
+                <a href="/super-admin/mdm-report" class="btn btn-outline-secondary">Reset (This Month)</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-warning text-dark shadow h-100">
+            <div class="card-body text-center">
+                <h5>Total Cost (Selected Period)</h5>
+                <h1 class="display-6 fw-bold">₹ {{ "%.2f"|format(mdm_data.total_cost) }}</h1>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-info text-white shadow h-100">
+            <div class="card-body text-center">
+                <h5>Primary Meals (Class 1-5)</h5>
+                <h2>{{ mdm_data.primary_count }}</h2>
+                <small>@ ₹6.78 / student</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-secondary text-white shadow h-100">
+            <div class="card-body text-center">
+                <h5>Upper Primary Meals (Class 6-8)</h5>
+                <h2>{{ mdm_data.upper_count }}</h2>
+                <small>@ ₹10.17 / student</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-dark text-white">
+                📊 Daily Cost Trend
+            </div>
+            <div class="card-body">
+                <canvas id="mdmCostChart" style="max-height: 400px;"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow mb-4 h-100">
+            <div class="card-header bg-dark text-white">
+                🏫 School-Wise Breakdown
+            </div>
+            <div class="card-body p-0" style="overflow-y: auto; max-height: 400px;">
+                <table class="table table-striped table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>School Name</th>
+                            <th class="text-end">Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for id, data in mdm_data.school_breakdown.items() %}
+                        <tr>
+                            <td>
+                                <strong>{{ data.name }}</strong><br>
+                                <span class="badge bg-primary" style="font-size: 0.7rem;">Pri: {{ data.p_count }}</span>
+                                <span class="badge bg-secondary" style="font-size: 0.7rem;">Upp: {{ data.u_count }}</span>
+                            </td>
+                            <td class="text-end fw-bold text-success">₹ {{ "%.2f"|format(data.cost) }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="2" class="text-center text-muted py-3">No Data Found</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Load Data Safely (Prevents VS Code Red Lines)
+    const mdmLabels = JSON.parse('{{ graph_labels | tojson | safe }}');
+    const mdmValues = JSON.parse('{{ graph_values | tojson | safe }}');
+
+    const ctxMDM = document.getElementById('mdmCostChart').getContext('2d');
+    new Chart(ctxMDM, {
+        type: 'bar', // Bar chart looks better for daily costs
+        data: {
+            labels: mdmLabels,
+            datasets: [{
+                label: 'Daily MDM Cost (₹)',
+                data: mdmValues,
+                backgroundColor: 'rgba(230, 126, 34, 0.6)',
+                borderColor: 'rgba(230, 126, 34, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { 
+                    beginAtZero: true, 
+                    title: { display: true, text: 'Cost in Rupees (₹)' } 
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
